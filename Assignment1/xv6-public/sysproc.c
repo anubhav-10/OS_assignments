@@ -89,3 +89,13 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+extern int toggle;
+
+int
+sys_toggle(void)
+{
+  toggle = 1 - toggle;
+  cprintf("toggle: %d\n", toggle);
+  return 1;
+}
