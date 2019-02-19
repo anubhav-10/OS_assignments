@@ -118,7 +118,8 @@ char* syscall_names[] = {
               "sys_mkdir",
               "sys_close",
               "sys_toggle", 
-              "sys_print_count"
+              "sys_print_count",
+              "sys_add"
 };
 
 
@@ -126,7 +127,7 @@ int
 sys_toggle(void)
 {
   toggle = 1 - toggle;
-  for(int i=0;i<24;i++)
+  for(int i=0;i<25;i++)
     sys_call_count[i] = 0;
   // cprintf("toggle: %d\n", toggle);
   return toggle;
@@ -135,7 +136,7 @@ sys_toggle(void)
 int
 sys_print_count(void)
 {
-  for(int i=0;i<24;i++){
+  for(int i=0;i<25;i++){
     if(sys_call_count[i])
       cprintf("%s %d\n", syscall_names[i], sys_call_count[i]);
   }

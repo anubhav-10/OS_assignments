@@ -106,6 +106,7 @@ extern int sys_uptime(void);
 // new sys calls
 extern int sys_toggle(void);
 extern int sys_print_count(void);
+extern int sys_add(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -131,33 +132,9 @@ static int (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 [SYS_toggle]  sys_toggle,
 [SYS_print_count]   sys_print_count,
+[SYS_add]     sys_add,
 };
 
-// char* syscall_names[] = {
-// [SYS_fork]    "sys_fork",
-// [SYS_exit]    "sys_exit",
-// [SYS_wait]    "sys_wait",
-// [SYS_pipe]    "sys_pipe",
-// [SYS_read]    "sys_read",
-// [SYS_kill]    "sys_kill",
-// [SYS_exec]    "sys_exec",
-// [SYS_fstat]   "sys_fstat",
-// [SYS_chdir]   "sys_chdir",
-// [SYS_dup]     "sys_dup",
-// [SYS_getpid]  "sys_getpid",
-// [SYS_sbrk]    "sys_sbrk",
-// [SYS_sleep]   "sys_sleep",
-// [SYS_uptime]  "sys_uptime",
-// [SYS_open]    "sys_open",
-// [SYS_write]   "sys_write",
-// [SYS_mknod]   "sys_mknod",
-// [SYS_unlink]  "sys_unlink",
-// [SYS_link]    "sys_link",
-// [SYS_mkdir]   "sys_mkdir",
-// [SYS_close]   "sys_close",
-// [SYS_toggle]  "sys_toggle",
-// [SYS_print_count]   "sys_print_count",
-// };
 
 int sys_call_count[24];
 int toggle = 0;

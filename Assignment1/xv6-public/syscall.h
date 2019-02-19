@@ -22,5 +22,6 @@
 #define SYS_close  21
 #define SYS_toggle 22
 #define SYS_print_count 23
+#define SYS_add 24
 
 // extern int toggle;
