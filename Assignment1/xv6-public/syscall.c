@@ -170,7 +170,8 @@ syscall(void)
 
   num = curproc->tf->eax;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    sys_call_count[num]++;
+    if (toggle == 1)
+      sys_call_count[num]++;
     // if (toggle == 1){
     //   cprintf("%s %d\n", syscall_names[num], sys_call_count[num]);
     // }
