@@ -23,7 +23,10 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+
+// new sys calls
 int toggle(void);
+int print_count(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -91,11 +91,53 @@ sys_uptime(void)
 }
 
 extern int toggle;
+extern int sys_call_count[24];
+
+
+char* syscall_names[] = {
+              "",
+              "sys_fork",
+              "sys_exit",
+              "sys_wait",
+              "sys_pipe",
+              "sys_read",
+              "sys_kill",
+              "sys_exec",
+              "sys_fstat",
+              "sys_chdir",
+              "sys_dup",
+              "sys_getpid",
+              "sys_sbrk",
+              "sys_sleep",
+              "sys_uptime",
+              "sys_open",
+              "sys_write",
+              "sys_mknod",
+              "sys_unlink",
+              "sys_link",
+              "sys_mkdir",
+              "sys_close",
+              "sys_toggle", 
+              "sys_print_count"
+};
+
 
 int
 sys_toggle(void)
 {
   toggle = 1 - toggle;
-  cprintf("toggle: %d\n", toggle);
-  return 1;
+  for(int i=0;i<24;i++)
+    sys_call_count[i] = 0;
+  // cprintf("toggle: %d\n", toggle);
+  return toggle;
+}
+
+int
+sys_print_count(void)
+{
+  for(int i=0;i<24;i++){
+    if(sys_call_count[i])
+      cprintf("%s %d\n", syscall_names[i], sys_call_count[i]);
+  }
+  return 0;
 }
