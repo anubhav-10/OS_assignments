@@ -91,7 +91,7 @@ sys_uptime(void)
 }
 
 extern int toggle;
-extern int sys_call_count[24];
+extern int sys_call_count[25];
 
 
 char* syscall_names[] = {
@@ -141,4 +141,16 @@ sys_print_count(void)
       cprintf("%s %d\n", syscall_names[i], sys_call_count[i]);
   }
   return 0;
+}
+
+int
+sys_add(void)
+{
+	int a, b;
+  if(argint(0, &a) < 0)
+    return -1;
+  if(argint(1, &b) < 0)
+    return -1;
+  // cprintf("%d", a + b);
+  return a + b;
 }
