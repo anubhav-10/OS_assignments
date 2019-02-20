@@ -3,7 +3,7 @@
 #include "date.h"
 
 int
-main(int argc ,char **argv)
+main(int argc, char **argv)
 {
 	if(argc != 3){
 		printf(2, "usage: add arg1 arg2...\n");

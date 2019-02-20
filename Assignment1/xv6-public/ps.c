@@ -2,8 +2,8 @@
 #include "user.h"
 #include "date.h"
 int
-main (int argc, char **argv)
+main ( int argc , char * argv [])
 {
-	toggle();
+	ps();
 	exit();
 }

@@ -107,6 +107,7 @@ extern int sys_uptime(void);
 extern int sys_toggle(void);
 extern int sys_print_count(void);
 extern int sys_add(void);
+extern int sys_ps(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -133,6 +134,7 @@ static int (*syscalls[])(void) = {
 [SYS_toggle]  sys_toggle,
 [SYS_print_count]   sys_print_count,
 [SYS_add]     sys_add,
+[SYS_ps]      sys_ps
 };
 
 
@@ -149,13 +151,6 @@ syscall(void)
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     if (toggle == 1)
       sys_call_count[num]++;
-    // if (toggle == 1){
-    //   cprintf("%s %d\n", syscall_names[num], sys_call_count[num]);
-    // }
-    // else{
-    //   for(int i=0;i<22;i++)
-    //     sys_call_count[i] = 0;
-    // }
     curproc->tf->eax = syscalls[num]();
   } else {
     cprintf("%d %s: unknown sys call %d\n",
