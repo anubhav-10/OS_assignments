@@ -160,5 +160,5 @@ int
 sys_ps(void)
 {
   ps();
-  return 1;
+  return 0;
 }
