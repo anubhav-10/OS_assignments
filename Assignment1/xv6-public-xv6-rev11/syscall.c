@@ -138,7 +138,7 @@ static int (*syscalls[])(void) = {
 };
 
 
-int sys_call_count[25];
+int sys_call_count[26];
 int toggle = 0;
 
 void
