@@ -546,3 +546,68 @@ ps(void)
   } 
   release(&ptable.lock);
 }
+
+struct Queue{
+  int rear, front;
+  char msg[50][MSGSIZE];
+};
+
+
+int enqueue(struct Queue *q, char *m){
+  if((q->front == 1 && q->rear == 49) || (q->rear == (q->front - 1)%49)){
+    // cprintf("Queue is full");
+    return -1;
+  }
+  if(q->front == 0){
+    q->front = q->rear = 1;
+    for(int i=0;i<MSGSIZE;i++)
+      q->msg[q->rear][i] = m[i];
+  }
+  else if(q->rear == 49 && q->front!=1){
+    q->rear = 1;
+    for(int i=0;i<MSGSIZE;i++)
+      q->msg[q->rear][i] = m[i];
+  }
+  else{
+    q->rear++;
+    for(int i=0;i<MSGSIZE;i++)
+      q->msg[q->rear][i] = m[i];
+  }
+  return 0;
+}
+
+int dequeue(struct Queue *q, char *m){
+  // char m[MSGSIZE];
+  if(q->front == 0){
+    return -1;
+  }
+  for(int i=0;i<MSGSIZE;i++)
+    m[i] = q->msg[q->front][i];
+  // return m;
+  if(q->front == q->rear){
+    q->front = q->rear = 0;
+  }
+  else if(q->front == 49)
+    q->front = 1;
+  else
+    q->front++;
+  return 0;
+}
+
+struct Queue msgQueue[NPROC];
+
+int send(int sender_pid, int rec_pid, void *msg){
+  if(enqueue(&msgQueue[rec_pid], msg) < 0)
+    return -1;
+  // char m[MSGSIZE];
+  // dequeue(&msgQueue[rec_pid], m);
+  // cprintf("I am printing: %s\n", m);
+  return 0;
+}
+
+int recv(void *msg){
+  struct proc *p = myproc();
+  while(dequeue(&msgQueue[p->pid], msg) == -1);
+
+  return 0; 
+}

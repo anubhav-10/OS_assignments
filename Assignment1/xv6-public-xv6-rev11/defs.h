@@ -120,7 +120,10 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+// new functions
 void			ps(void);
+int 			send(int, int , void*);
+int 			recv(void*);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

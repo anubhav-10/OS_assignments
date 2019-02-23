@@ -91,7 +91,7 @@ sys_uptime(void)
 }
 
 extern int toggle;
-extern int sys_call_count[26];
+extern int sys_call_count[28];
 
 
 char* syscall_names[] = {
@@ -120,7 +120,9 @@ char* syscall_names[] = {
               "sys_toggle", 
               "sys_print_count",
               "sys_add",
-              "sys_ps"
+              "sys_ps",
+              "sys_send",
+              "sys_recv"
 };
 
 
@@ -128,7 +130,7 @@ int
 sys_toggle(void)
 {
   toggle = 1 - toggle;
-  for(int i=0;i<26;i++)
+  for(int i=0;i<28;i++)
     sys_call_count[i] = 0;
   // cprintf("toggle: %d\n", toggle);
   return toggle;
@@ -137,7 +139,7 @@ sys_toggle(void)
 int
 sys_print_count(void)
 {
-  for(int i=0;i<26;i++){
+  for(int i=0;i<28;i++){
     if(sys_call_count[i])
       cprintf("%s %d\n", syscall_names[i], sys_call_count[i]);
   }
@@ -160,5 +162,30 @@ int
 sys_ps(void)
 {
   ps();
+  return 0;
+}
+
+int
+sys_send(void)
+{
+  int sender_pid, rec_pid;
+  char *msg;
+  if(argint(0, &sender_pid) < 0)
+    return -1;
+  if(argint(1, &rec_pid) < 0)
+    return -1;
+  if(argstr(2, &msg) < 0)
+    return -1;
+  send(sender_pid, rec_pid, msg);
+  return 0;
+}
+
+int 
+sys_recv(void)
+{
+  char *msg;
+  if(argstr(0, &msg) < 0)
+    return -1;
+  recv(msg);
   return 0;
 }
