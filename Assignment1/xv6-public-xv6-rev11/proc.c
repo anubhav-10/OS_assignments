@@ -550,6 +550,7 @@ ps(void)
 struct Queue{
   int rear, front;
   char msg[50][MSGSIZE];
+  struct spinlock lock;
 };
 
 
@@ -595,9 +596,32 @@ int dequeue(struct Queue *q, char *m){
 }
 
 struct Queue msgQueue[NPROC];
+int isTryingToReceive[NPROC];
+// struct proc ProcessTable[NPROC];
 
 int send(int sender_pid, int rec_pid, void *msg){
-  if(enqueue(&msgQueue[rec_pid], msg) < 0)
+  acquire(&msgQueue[rec_pid].lock);
+  int e = enqueue(&msgQueue[rec_pid], msg);
+  release(&msgQueue[rec_pid].lock);
+  // cprintf("%d\n", rec_pid);
+  if(isTryingToReceive[rec_pid]){
+    isTryingToReceive[rec_pid] = 0;
+
+    struct proc *p;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid == rec_pid){
+        release(&ptable.lock);
+        // cprintf("sender wake up receiver: pid=%d rec_pid=%d\n", p->pid, rec_pid);
+
+        wakeup1(p);
+        break;
+      }
+    } 
+    // release(&ptable.lock);
+
+  }
+  if(e < 0)
     return -1;
   // char m[MSGSIZE];
   // dequeue(&msgQueue[rec_pid], m);
@@ -607,7 +631,22 @@ int send(int sender_pid, int rec_pid, void *msg){
 
 int recv(void *msg){
   struct proc *p = myproc();
-  while(dequeue(&msgQueue[p->pid], msg) == -1);
+  // cprintf("%d\n", p->pid);
+  // while(dequeue(&msgQueue[p->pid], msg) == -1);
+  acquire(&msgQueue[p->pid].lock);
+  int e = dequeue(&msgQueue[p->pid], msg);
+  release(&msgQueue[p->pid].lock);
+  // cprintf("e = %d\n", e);
+  if(e == -1){
+    isTryingToReceive[p->pid] = 1;
+    acquire(&ptable.lock);
+    sleep(p, &ptable.lock);
+    release(&ptable.lock);
+    // cprintf("wokeup\n");
+  }
+  acquire(&msgQueue[p->pid].lock);
+  dequeue(&msgQueue[p->pid], msg);
+  release(&msgQueue[p->pid].lock);
 
   return 0; 
 }
