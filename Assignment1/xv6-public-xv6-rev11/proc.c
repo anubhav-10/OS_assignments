@@ -603,12 +603,18 @@ int send(int sender_pid, int rec_pid, void *msg){
   acquire(&msgQueue[rec_pid].lock);
   int e = enqueue(&msgQueue[rec_pid], msg);
   release(&msgQueue[rec_pid].lock);
+
+  if(e < 0)
+    return -1;
   // cprintf("%d\n", rec_pid);
+
+  // if tried to receive then wakeup that process
   if(isTryingToReceive[rec_pid]){
     isTryingToReceive[rec_pid] = 0;
 
     struct proc *p;
     acquire(&ptable.lock);
+    // search for the process p
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->pid == rec_pid){
         release(&ptable.lock);
@@ -619,10 +625,7 @@ int send(int sender_pid, int rec_pid, void *msg){
       }
     } 
     // release(&ptable.lock);
-
   }
-  if(e < 0)
-    return -1;
   // char m[MSGSIZE];
   // dequeue(&msgQueue[rec_pid], m);
   // cprintf("I am printing: %s\n", m);
