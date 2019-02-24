@@ -645,11 +645,12 @@ int recv(void *msg){
     acquire(&ptable.lock);
     sleep(p, &ptable.lock);
     release(&ptable.lock);
+  
+    acquire(&msgQueue[p->pid].lock);
+    dequeue(&msgQueue[p->pid], msg);
+    release(&msgQueue[p->pid].lock);
     // cprintf("wokeup\n");
   }
-  acquire(&msgQueue[p->pid].lock);
-  dequeue(&msgQueue[p->pid], msg);
-  release(&msgQueue[p->pid].lock);
 
   return 0; 
 }
