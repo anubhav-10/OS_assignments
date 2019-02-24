@@ -540,8 +540,8 @@ ps(void)
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    // if(p->state == RUNNABLE || p->state == RUNNING || p->state == SLEEPING)
-    if(p->state != UNUSED)
+    if(p->state == RUNNABLE || p->state == RUNNING || p->state == SLEEPING)
+    // if(p->state != UNUSED)
       cprintf("pid:%d name:%s\n", p->pid, p->name);
   } 
   release(&ptable.lock);
@@ -599,56 +599,65 @@ struct Queue msgQueue[NPROC];
 int isTryingToReceive[NPROC];
 // struct proc ProcessTable[NPROC];
 
+int find_id_in_ptable(int id){
+  int id_in_ptable = -1;
+  for(int i=0;i<NPROC;i++){
+    if(ptable.proc[i].pid == id){
+      id_in_ptable = i;
+      break;
+    }
+  }
+
+  if(id_in_ptable >= NPROC || id_in_ptable == -1)
+    return -1;
+
+  return id_in_ptable;  
+}
+
 int send(int sender_pid, int rec_pid, void *msg){
-  acquire(&msgQueue[rec_pid].lock);
-  int e = enqueue(&msgQueue[rec_pid], msg);
-  release(&msgQueue[rec_pid].lock);
+  int id_in_ptable = find_id_in_ptable(rec_pid);
+
+  if(id_in_ptable == -1)
+    return -1;
+
+  acquire(&msgQueue[id_in_ptable].lock);
+  int e = enqueue(&msgQueue[id_in_ptable], msg);
+  release(&msgQueue[id_in_ptable].lock);
 
   if(e < 0)
     return -1;
-  // cprintf("%d\n", rec_pid);
 
   // if tried to receive then wakeup that process
-  if(isTryingToReceive[rec_pid]){
-    isTryingToReceive[rec_pid] = 0;
-
-    struct proc *p;
+  if(isTryingToReceive[id_in_ptable]){
+    isTryingToReceive[id_in_ptable] = 0;
     acquire(&ptable.lock);
-    // search for the process p
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->pid == rec_pid){
-        release(&ptable.lock);
-        // cprintf("sender wake up receiver: pid=%d rec_pid=%d\n", p->pid, rec_pid);
-
-        wakeup1(p);
-        break;
-      }
-    } 
-    // release(&ptable.lock);
+    wakeup1(&ptable.proc[id_in_ptable]);
+    release(&ptable.lock);
   }
-  // char m[MSGSIZE];
-  // dequeue(&msgQueue[rec_pid], m);
-  // cprintf("I am printing: %s\n", m);
   return 0;
 }
 
 int recv(void *msg){
   struct proc *p = myproc();
-  // cprintf("%d\n", p->pid);
+
+  int id_in_ptable = find_id_in_ptable(p->pid);
+ 
+  if(id_in_ptable == -1)
+    return -1;
+
   // while(dequeue(&msgQueue[p->pid], msg) == -1);
-  acquire(&msgQueue[p->pid].lock);
-  int e = dequeue(&msgQueue[p->pid], msg);
-  release(&msgQueue[p->pid].lock);
-  // cprintf("e = %d\n", e);
+  acquire(&msgQueue[id_in_ptable].lock);
+  int e = dequeue(&msgQueue[id_in_ptable], msg);
+  release(&msgQueue[id_in_ptable].lock);
   if(e == -1){
-    isTryingToReceive[p->pid] = 1;
+    isTryingToReceive[id_in_ptable] = 1;
     acquire(&ptable.lock);
     sleep(p, &ptable.lock);
     release(&ptable.lock);
   
-    acquire(&msgQueue[p->pid].lock);
-    dequeue(&msgQueue[p->pid], msg);
-    release(&msgQueue[p->pid].lock);
+    acquire(&msgQueue[id_in_ptable].lock);
+    dequeue(&msgQueue[id_in_ptable], msg);
+    release(&msgQueue[id_in_ptable].lock);
     // cprintf("wokeup\n");
   }
 
