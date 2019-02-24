@@ -176,8 +176,8 @@ sys_send(void)
     return -1;
   if(argstr(2, &msg) < 0)
     return -1;
-  send(sender_pid, rec_pid, msg);
-  return 0;
+  
+  return send(sender_pid, rec_pid, msg);;
 }
 
 int 
@@ -189,3 +189,20 @@ sys_recv(void)
   recv(msg);
   return 0;
 }
+
+// int
+// sys_send_multi(void)
+// {
+//   int sender_pid, length;
+//   int *rec_pid;
+//   char *msg;
+//   if(argint(0, &sender_pid) < 0)
+//     return -1;
+//   if(argint(1, &rec_pid) < 0)
+//     return -1;
+//   if(argstr(2, &msg) < 0)
+//     return -1;
+//   if(argint(3, &length) < 0)
+//     return -1;
+
+// }
