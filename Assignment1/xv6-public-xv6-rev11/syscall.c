@@ -110,6 +110,11 @@ extern int sys_add(void);
 extern int sys_ps(void);
 extern int sys_send(void);
 extern int sys_recv(void);
+extern int sys_send_multi(void);
+extern int sys_sigset(void);
+extern int sys_sigsend(void);
+extern int sys_sigret(void);
+extern int sys_sigpause(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -138,11 +143,16 @@ static int (*syscalls[])(void) = {
 [SYS_add]     sys_add,
 [SYS_ps]      sys_ps,
 [SYS_send]    sys_send,
-[SYS_recv]    sys_recv
+[SYS_recv]    sys_recv,
+[SYS_send_multi]    sys_send_multi,
+[SYS_sigset]  sys_sigset,
+[SYS_sigsend] sys_sigsend,
+[SYS_sigret]  sys_sigret,
+[SYS_sigpause]      sys_sigpause
 };
 
 
-int sys_call_count[28];
+int sys_call_count[29];
 int toggle = 0;
 
 void

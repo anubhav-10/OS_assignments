@@ -192,9 +192,10 @@ UPROGS=\
 	_assig1_5\
 	_assig1_6\
 	_assig1_7\
+	_assig1_8\
 
-fs.img: mkfs README $(UPROGS)
-	./mkfs fs.img README $(UPROGS)
+fs.img: mkfs README arr $(UPROGS)
+	./mkfs fs.img README arr $(UPROGS)
 
 -include *.d
 
@@ -268,6 +269,7 @@ EXTRA=\
     	assig1_5.c\
     	assig1_6.c\
     	assig1_7.c\
+    	assig1_8.c\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\

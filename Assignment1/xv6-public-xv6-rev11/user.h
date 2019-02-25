@@ -31,6 +31,7 @@ int add(int, int);
 int ps(void);
 int send(int, int, void*);
 int recv(void*);
+int send_multi(int, int*, void*, int);
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -45,3 +46,4 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+void itoa(int, char*);

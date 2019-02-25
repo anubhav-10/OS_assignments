@@ -91,7 +91,7 @@ sys_uptime(void)
 }
 
 extern int toggle;
-extern int sys_call_count[28];
+extern int sys_call_count[29];
 
 
 char* syscall_names[] = {
@@ -130,7 +130,7 @@ int
 sys_toggle(void)
 {
   toggle = 1 - toggle;
-  for(int i=0;i<28;i++)
+  for(int i=0;i<29;i++)
     sys_call_count[i] = 0;
   // cprintf("toggle: %d\n", toggle);
   return toggle;
@@ -139,7 +139,7 @@ sys_toggle(void)
 int
 sys_print_count(void)
 {
-  for(int i=0;i<28;i++){
+  for(int i=0;i<29;i++){
     if(sys_call_count[i])
       cprintf("%s %d\n", syscall_names[i], sys_call_count[i]);
   }
@@ -190,19 +190,47 @@ sys_recv(void)
   return 0;
 }
 
-// int
-// sys_send_multi(void)
-// {
-//   int sender_pid, length;
-//   int *rec_pid;
-//   char *msg;
-//   if(argint(0, &sender_pid) < 0)
-//     return -1;
-//   if(argint(1, &rec_pid) < 0)
-//     return -1;
-//   if(argstr(2, &msg) < 0)
-//     return -1;
-//   if(argint(3, &length) < 0)
-//     return -1;
+int
+sys_send_multi(void)
+{
+  int sender_pid, length;
+  char *rec_pid;
+  char *msg;
+  if(argint(0, &sender_pid) < 0)
+    return -1;
+  if(argstr(1, &msg) < 0)
+    return -1;
+  if(argint(2, &length) < 0)
+    return -1;
+  if(argptr(3, &rec_pid, length*4) < 0)
+    return -1;
+  return 0;
+}
 
-// }
+int
+sys_sigset(void)
+{
+  int signal_handler;
+  argint(0, &signal_handler);
+  sigset((sig_handler)signal_handler);
+  return 0;
+}
+
+int
+sys_sigsend(void)
+{
+  return 0;
+}
+
+int
+sys_sigret(void)
+{
+  sigret();
+  return 0;
+}
+
+int
+sys_sigpause(void)
+{
+  return 0;
+}

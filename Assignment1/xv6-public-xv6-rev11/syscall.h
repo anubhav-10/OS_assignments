@@ -26,4 +26,9 @@
 #define SYS_ps 	   25
 #define SYS_send   26
 #define SYS_recv   27
+#define SYS_send_multi	28
+#define SYS_sigset 29
+#define SYS_sigsend		30
+#define SYS_sigret 31
+#define SYS_sigpause	32
 // extern int toggle;

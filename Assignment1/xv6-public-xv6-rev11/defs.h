@@ -125,6 +125,14 @@ void			ps(void);
 int 			send(int, int , void*);
 int 			recv(void*);
 
+void			sigset(sig_handler);
+int 			sigsend(int);
+void 			sigret(void);
+void 			sigpause(int);
+
+void			call_sigret_start(void);
+void			call_sigret_end(void);
+
 // swtch.S
 void            swtch(struct context**, struct context*);
 

@@ -540,8 +540,8 @@ ps(void)
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->state == RUNNABLE || p->state == RUNNING || p->state == SLEEPING)
-    // if(p->state != UNUSED)
+    // if(p->state == RUNNABLE || p->state == RUNNING || p->state == SLEEPING)
+    if(p->state != UNUSED)
       cprintf("pid:%d name:%s\n", p->pid, p->name);
   } 
   release(&ptable.lock);
@@ -552,7 +552,6 @@ struct Queue{
   char msg[50][MSGSIZE];
   struct spinlock lock;
 };
-
 
 int enqueue(struct Queue *q, char *m){
   if((q->front == 1 && q->rear == 49) || (q->rear == (q->front - 1)%49)){
@@ -662,4 +661,73 @@ int recv(void *msg){
   }
 
   return 0; 
+}
+
+// stack for signals
+struct stack {
+  int top;
+  int signal_id[50];
+  struct spinlock lock;
+};
+
+struct stack pending_signals[NPROC];
+
+int push(struct stack *s, int sig) {
+  if(s->top >= 50)
+    return -1;
+
+  s->signal_id[++(s->top)] = sig;
+  return 0;
+}
+
+int pop(struct stack *s) {
+  if(s->top <= 0)
+    return -1;
+
+  return s->signal_id[s->top--];
+}
+
+void sigset(sig_handler new_sig_handler) {
+  proc->sighandler = new_sig_handler;
+}
+
+int sigsend(int rec_pid_in_ptable){
+  return push(&pending_signals[rec_pid_in_ptable], 1);
+}
+
+void sigret(void){
+  memmove(proc->tf, &proc->oldTF, sizeof(struct trapframe));
+  proc->ignoreSignals = 0;
+}
+
+void sigpause(int id){
+  pushcli();
+  int id_in_ptable = find_id_in_ptable(id);
+  if(pending_signals[id_in_ptable].top == 0){
+    proc->chan = 0;
+    proc->isSigPaused = 1;
+    sched();
+  }
+
+  popcli();
+}
+
+void checkSignal(struct trapframe *tf){
+  if(proc == 0){
+    return;
+  }
+  if(proc->ignoreSignals)
+    return;
+  if((tf->cs & 3) != DPL_USER)
+    return;
+
+  int id_in_ptable = find_id_in_ptable(myproc()->pid);
+  int popVal = pop(&pending_signals[id_in_ptable]);
+  if(popVal == -1)
+    return;
+  proc->ignoreSignals = 1;
+  // memmove(&proc->oldTF, proc->tf, sizeof(struct trapframe));
+  // proc->tf->esp -= (uint)&call_sigret_end - (uint)&call_sigret_start;
+  // memmove((void*)proc->tf->esp, call_sigret_start, (uint)&call_sigret_end - (uint)&call_sigret_start);
+
 }
