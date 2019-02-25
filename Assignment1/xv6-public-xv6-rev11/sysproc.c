@@ -219,7 +219,9 @@ sys_sigset(void)
 int
 sys_sigsend(void)
 {
-  return 0;
+  int pid;
+  argint(0, &pid);
+  return sigsend(pid);
 }
 
 int
@@ -232,5 +234,8 @@ sys_sigret(void)
 int
 sys_sigpause(void)
 {
+  int pid;
+  argint(0, &pid);
+  sigpause(pid);
   return 0;
 }

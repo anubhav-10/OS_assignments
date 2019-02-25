@@ -1,7 +1,7 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
-#define THREADCOUNT 8
+#define THREADCOUNT 7
 
 // char* toArray(int n){
 // 	int l = 8;
@@ -47,11 +47,12 @@ main(int argc, char *argv[])
   		if(cid == 0){
   			int start_index = i * (size/THREADCOUNT);
   			int end_index = (i + 1) * (size/THREADCOUNT);
-  			if (i == THREADCOUNT) end_index = size;
+  			if (i == THREADCOUNT - 1) end_index = size;
 
   			int local_sum = 0;
   			for(int j=start_index;j<end_index;j++)
   				local_sum += arr[j];
+  			// char *m = (char*)malloc(MSGSIZE);
   			char m[8];
   			itoa(local_sum, m);
   			send(getpid(), parent_pid, &m);
@@ -60,20 +61,21 @@ main(int argc, char *argv[])
   	}
 
   	for(int i=0;i<THREADCOUNT;i++){
+		// char *msg = (char*)malloc(MSGSIZE);
   		char msg[8];
   		recv(&msg);
   		tot_sum += atoi(msg);
+  		wait();
   	}
 
-  	int mean = tot_sum / size;
+
+  	float mean = tot_sum / size;
 
   	float temp = 0;
   	for(int i=0;i<size;i++)
   		temp += (arr[i] - mean) * (arr[i]  - mean);
 
   	variance = temp / size;
-
-
 
 
 

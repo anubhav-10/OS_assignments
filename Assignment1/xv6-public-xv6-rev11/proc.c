@@ -729,5 +729,7 @@ void checkSignal(struct trapframe *tf){
   // memmove(&proc->oldTF, proc->tf, sizeof(struct trapframe));
   // proc->tf->esp -= (uint)&call_sigret_end - (uint)&call_sigret_start;
   // memmove((void*)proc->tf->esp, call_sigret_start, (uint)&call_sigret_end - (uint)&call_sigret_start);
-
+  *((int*)(proc->tf->esp - 4)) = popVal;
+  *((int*)(proc->tf->esp - 8)) = proc->tf->esp;
+  proc->tf->esp = (uint)proc->sighandler;
 }
