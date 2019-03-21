@@ -19,69 +19,168 @@ int main(int argc, char *argv[])
 {
 	float diff;
 	int i,j;
-	float mean;
-	float u[N][N];
-	float w[N][N];
+	// float mean;
 
-	int count=0;
-	mean = 0.0;
-	for (i = 0; i < N; i++){
-		u[i][0] = u[i][N-1] = u[0][i] = T;
-		u[N-1][i] = 0.0;
-		mean += u[i][0] + u[i][N-1] + u[0][i] + u[N-1][i];
+	int count = 0;
+	// mean = (3 * T) / 4;
+
+	int pipe_above[NUMTHREADS - 1][2];
+	int pipe_below[NUMTHREADS - 1][2];
+	int pipe_parent[NUMTHREADS][2];
+	int children[NUMTHREADS];
+
+	for(i = 0; i < NUMTHREADS - 1; i++) {
+		pipe(pipe_above[i]);
+		pipe(pipe_below[i]);
+		pipe(pipe_parent[i]);
 	}
-	mean /= (4.0 * N);
-	for (i = 1; i < N-1; i++ )
-		for ( j= 1; j < N-1; j++) u[i][j] = mean;
 
-	for (i = 0; i < N; i++ )
-		for ( j= 0; j < N; j++) w[i][j] = 0;
-	// int size = (N - 2) / NUMTHREADS;
+	pipe(pipe_parent[NUMTHREADS - 1]);
+
 	int parent_pid = getpid();
-	for(;;){
-		diff = 0.0;
-		for(int k = 0; k < NUMTHREADS; k++) {
-			int cid = fork();
-			if(cid == 0) {
-				// int start_index = i * size + 1;
-				// int end_index = (i + 1) * size + 1;
-				// if(k == NUMTHREADS - 1) end_index = N - 1;
-				float local_diff = 0.0;
-				for(i = 1 ; i < N - 1; i++){
-					if(i % NUMTHREADS != k) continue;
-					printf(1,"%d \n",((int)k));
+	for(int k = 0; k < NUMTHREADS; k++) {
+		children[k] = fork();
+		if (children[k] == 0) {
+			float local_diff = 0.0;
+			int size = N / NUMTHREADS;
+			if (k == N - 1) size += N % NUMTHREADS;
+			if (k == 0 || k == N - 1) size += 1;
+			else size += 2;
+			float u[size][N];
+			float w[size][N];
 
-					for(j =1 ; j < N-1; j++){
-						w[i][j] = ( u[i-1][j] + u[i+1][j]+
-							    u[i][j-1] + u[i][j+1])/4.0;
-						if( fabsm(w[i][j] - u[i][j]) > local_diff )
-							local_diff = fabsm(w[i][j]- u[i][j]);	
+			// initialization of u's
+			if (k == 0) {
+				for(i = 0; i < N; i++) 
+					u[0][i] = T;
+				for(i = 1; i < size - 1; i++) 
+					u[i][0] = u[i][N - 1] = T;
+				for(i = 1; i < size - 1; i++) {
+					for(j = 1; j < N - 1; i++) {
+						u[i][j] = (3 * T) / 4;
 					}
 				}
-				send(getpid(), parent_pid, (char*)&local_diff);
-				exit();
 			}
+
+			else if (k == NUMTHREADS - 1) {
+				for(i = 0; i < N; i++) 
+					u[size - 1][i] = 0.0;
+				for(i = 1; i < size - 1; i++) 
+					u[i][0] = u[i][N - 1] = T;
+				for(i = 1; i < size - 1; i++) {
+					for(j = 1; j < N - 1; i++) {
+						u[i][j] = (3 * T) / 4;
+					}
+				}
+			}
+
+			else {
+				for(i = 1; i < size - 1; i++) 
+					u[i][0] = u[i][N - 1] = T;
+				for(i = 1; i < size - 1; i++) {
+					for(j = 1; j < N - 1; i++) {
+						u[i][j] = (3 * T) / 4;
+					}
+				}
+			}
+			int count = 0;
+			for(;;) {
+				// write to processes and read
+				count++;
+				if (k == 0) {
+					for(i = 0; i < N; i++) {
+						// write to below
+						write(pipe_below[0][1], (char*)&u[size - 2][i], sizeof(float));
+				// printf(1,"pid : %d count : %d \n",k, count);
+					}
+					for(i = 0; i < N; i++) {
+						// read from below
+						read(pipe_above[0][0], (char*)&u[size - 1][i], sizeof(float));
+					}
+				}
+
+				else if (k == NUMTHREADS - 1) {
+				// printf(1,"pid : %d count : %d \n",k, count);
+					for(i = 0; i < N; i++) {
+						// write to above
+						write(pipe_above[NUMTHREADS - 2][1], (char*)&u[1][i], sizeof(float));
+					}
+					for(i = 0; i < N; i++) {
+						// read from above
+						read(pipe_below[NUMTHREADS - 2][0], (char*)&u[0][i], sizeof(float));
+					}
+				}
+
+				else {
+					for(i = 0; i < N; i++) {
+						// write to below
+						write(pipe_below[k][1], (char*)&u[size - 2][i], sizeof(float));
+						// write to above
+						write(pipe_above[k - 1][1], (char*)&u[1][i], sizeof(float));
+					}
+					for(i = 0; i < N; i++) {
+						// read from below
+						read(pipe_above[k][0], (char*)&u[size - 1][i], sizeof(float));
+						// read from above
+						read(pipe_below[k - 1][0], (char*)&u[0][i], sizeof(float));
+					}
+				}
+
+				for(i = 1; i < size - 1; i++) {
+					for(j = 1; j < N - 1; j++) {
+						w[i][j] = ( u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]) / 4.0;
+						if(fabsm(w[i][j] - u[i][j]) > local_diff )
+							local_diff = fabsm(w[i][j]- u[i][j]);
+					}
+				}
+
+				send(getpid(), parent_pid, (char*)&local_diff);
+				int signal;
+				recv((char*)&signal);
+				if(signal == 1) {
+					for(i = 1; i < size - 1; i++) {
+						for(j = 0; j < N; j++) {
+							write(pipe_parent[k][1], (char*)&u[i][j], sizeof(float));
+						}
+					}		
+					exit();
+				}
+
+				for(i = 1; i < size - 1; i++) {
+					for(j = 1; j < N - 1; j++) {
+						u[i][j] = w[i][j];
+					}
+				}
+			}
+		}		
+	}
+
+	for(;;) {
+		diff = 0.0;
+		count++;
+		// printf(1,"%d ",((int)count));
+		for(i = 0; i < NUMTHREADS; i++) {
+			float d;
+			recv((char*)&d);
+			if(diff > d)
+				diff = d;
 		}
-	    count++;
-	    
-	    for(int i = 0; i < NUMTHREADS; i++) {
-	    	float msg;
-	    	recv((char*)&msg);
-	    	if(msg > diff) diff = msg;
-	    	// wait();
-	    }
- 
-		if(diff<= E || count > L){ 
+		if(diff <= E || count > L) {
+			for(i = 0; i < NUMTHREADS; i++) 
+				send(getpid(), children[i], (char*)1);
 			break;
 		}
-	
-		for (i =1; i< N-1; i++)	
-			for (j =1; j< N-1; j++) u[i][j] = w[i][j];
 	}
-	for(i =0; i <N; i++){
-		for(j = 0; j<N; j++)
-			printf(1,"%d ",((int)u[i][j]));
-		printf(1,"\n");
+
+	for(int k = 0; k < NUMTHREADS; k++) {
+		float val;
+		for(i =0; i < N; i++) {
+			for(j = 0; j < N; j++) {
+				read(pipe_parent[k][0], (char*)&val, sizeof(float));
+				printf(1,"%d ",((int)val));
+			}
+			printf(1,"\n");
+		}
 	}
 	exit();
 
