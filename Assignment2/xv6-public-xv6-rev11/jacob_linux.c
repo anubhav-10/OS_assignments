@@ -1,14 +1,16 @@
-#include "types.h"
-#include "stat.h"
-#include "user.h"
-
+#include<stdio.h> 
+#include<stdlib.h> 
+#include<unistd.h> 
+#include<sys/types.h> 
+#include<string.h> 
+#include<sys/wait.h> 
 
 #define N 11
 #define E 0.00001
 #define T 100.0
 #define P 6
 #define L 20000
-#define NUMTHREADS 1
+#define NUMTHREADS 4
 
 float fabsm(float a){
 	if(a<0)
@@ -187,7 +189,7 @@ int main(int argc, char *argv[])
 							}
 						}
 					}		
-					exit();
+					exit(0);
 				}
 
 				for(i = 1; i < size - 1; i++) {
@@ -239,9 +241,9 @@ int main(int argc, char *argv[])
 			for(i =0; i < size - 1; i++) {
 				for(j = 0; j < N; j++) {
 					read(pipe_parent[k][0], (char*)&val, sizeof(float));
-					printf(1, "%d ",((int)val));
+					printf("%d ",((int)val));
 				}
-				printf(1, "\n");
+				printf("\n");
 			}
 		}
 		else if (k == NUMTHREADS - 1) {
@@ -249,21 +251,21 @@ int main(int argc, char *argv[])
 			for(i =1; i < size; i++) {
 				for(j = 0; j < N; j++) {
 					read(pipe_parent[k][0], (char*)&val, sizeof(float));
-					printf(1, "%d ",((int)val));
+					printf("%d ",((int)val));
 				}
-				printf(1, "\n");
+				printf("\n");
 			}
 		}
 		else {
 			for(i =1; i < size-1; i++) {
 				for(j = 0; j < N; j++) {
 					read(pipe_parent[k][0], (char*)&val, sizeof(float));
-					printf(1, "%d ",((int)val));
+					printf("%d ",((int)val));
 				}
-				printf(1, "\n");
+				printf("\n");
 			}			
 		}
 	}
-	exit();
+	exit(0);
 
 }
