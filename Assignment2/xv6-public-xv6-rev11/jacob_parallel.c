@@ -40,7 +40,10 @@ int main(int argc, char *argv[])
 	int parent_pid = getpid();
 	for(int k = 0; k < NUMTHREADS; k++) {
 		children[k] = fork();
+				// printf(1,"children : %d  \n",children[k]);
+
 		if (children[k] == 0) {
+
 			float local_diff = 0.0;
 			int size = N / NUMTHREADS;
 			if (k == N - 1) size += N % NUMTHREADS;
@@ -48,7 +51,7 @@ int main(int argc, char *argv[])
 			else size += 2;
 			float u[size][N];
 			float w[size][N];
-
+			// printf(1, "inside1\n");
 			// initialization of u's
 			if (k == 0) {
 				for(i = 0; i < N; i++) 
@@ -56,42 +59,47 @@ int main(int argc, char *argv[])
 				for(i = 1; i < size - 1; i++) 
 					u[i][0] = u[i][N - 1] = T;
 				for(i = 1; i < size - 1; i++) {
-					for(j = 1; j < N - 1; i++) {
+					for(j = 1; j < N - 1; j++) {
 						u[i][j] = (3 * T) / 4;
 					}
 				}
 			}
-
+			// printf(1, "inside2\n");
 			else if (k == NUMTHREADS - 1) {
+				// printf(1,"%d: ", k);
 				for(i = 0; i < N; i++) 
 					u[size - 1][i] = 0.0;
 				for(i = 1; i < size - 1; i++) 
 					u[i][0] = u[i][N - 1] = T;
 				for(i = 1; i < size - 1; i++) {
-					for(j = 1; j < N - 1; i++) {
+					for(j = 1; j < N - 1; j++) {
 						u[i][j] = (3 * T) / 4;
 					}
 				}
+				// printf(1,"%d: ", k);
+				
 			}
-
+			// printf(1, "inside3\n");
 			else {
 				for(i = 1; i < size - 1; i++) 
 					u[i][0] = u[i][N - 1] = T;
 				for(i = 1; i < size - 1; i++) {
-					for(j = 1; j < N - 1; i++) {
+					for(j = 1; j < N - 1; j++) {
 						u[i][j] = (3 * T) / 4;
 					}
 				}
 			}
+			// printf(1, "inside4\n");
 			int count = 0;
 			for(;;) {
 				// write to processes and read
 				count++;
+
+				// printf(1,"pid : %d count : %d \n",k, count);
 				if (k == 0) {
 					for(i = 0; i < N; i++) {
 						// write to below
 						write(pipe_below[0][1], (char*)&u[size - 2][i], sizeof(float));
-				// printf(1,"pid : %d count : %d \n",k, count);
 					}
 					for(i = 0; i < N; i++) {
 						// read from below
@@ -100,7 +108,6 @@ int main(int argc, char *argv[])
 				}
 
 				else if (k == NUMTHREADS - 1) {
-				// printf(1,"pid : %d count : %d \n",k, count);
 					for(i = 0; i < N; i++) {
 						// write to above
 						write(pipe_above[NUMTHREADS - 2][1], (char*)&u[1][i], sizeof(float));
@@ -108,6 +115,7 @@ int main(int argc, char *argv[])
 					for(i = 0; i < N; i++) {
 						// read from above
 						read(pipe_below[NUMTHREADS - 2][0], (char*)&u[0][i], sizeof(float));
+				printf(1,"pid : %d iter : %d count : %d \n",k, i, count);
 					}
 				}
 
@@ -123,9 +131,12 @@ int main(int argc, char *argv[])
 						read(pipe_above[k][0], (char*)&u[size - 1][i], sizeof(float));
 						// read from above
 						read(pipe_below[k - 1][0], (char*)&u[0][i], sizeof(float));
+				// printf(1,"pid : %d iter : %d count : %d \n",k, i, count);
 					}
+				printf(1,"pid : %d iter : %d count : %d \n",k, i, count);
 				}
 
+				printf(1,"here%d \n ", k);
 				for(i = 1; i < size - 1; i++) {
 					for(j = 1; j < N - 1; j++) {
 						w[i][j] = ( u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]) / 4.0;
@@ -134,6 +145,7 @@ int main(int argc, char *argv[])
 					}
 				}
 
+				
 				send(getpid(), parent_pid, (char*)&local_diff);
 				int signal;
 				recv((char*)&signal);
@@ -152,7 +164,8 @@ int main(int argc, char *argv[])
 					}
 				}
 			}
-		}		
+		}
+
 	}
 
 	for(;;) {
@@ -177,7 +190,7 @@ int main(int argc, char *argv[])
 		for(i =0; i < N; i++) {
 			for(j = 0; j < N; j++) {
 				read(pipe_parent[k][0], (char*)&val, sizeof(float));
-				printf(1,"%d ",((int)val));
+				// printf(1,"%d ",((int)val));
 			}
 			printf(1,"\n");
 		}
