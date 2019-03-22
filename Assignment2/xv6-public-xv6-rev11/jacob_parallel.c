@@ -2,13 +2,12 @@
 #include "stat.h"
 #include "user.h"
 
-
 #define N 11
 #define E 0.00001
 #define T 100.0
 #define P 6
 #define L 20000
-#define NUMTHREADS 1
+#define NUMTHREADS 3
 
 float fabsm(float a){
 	if(a<0)
@@ -53,13 +52,26 @@ int main(int argc, char *argv[])
 			float local_diff = 0.0;
 			int size = N / NUMTHREADS;
 			if (k == NUMTHREADS - 1) size += N % NUMTHREADS;
-			if (k == 0 || k == N - 1) size += 1;
+			if (k == 0 || k == NUMTHREADS - 1) size += 1;
 			else size += 2;
 			float u[size][N];
 			float w[size][N];
 			// printf( "inside1\n");
 			// initialization of u's
-			if (k == 0) {
+			if (k == 0 && NUMTHREADS == 1) {
+				size = N;
+				for(i = 0; i < N; i++) {
+					u[0][i] = u[i][0] = u[i][N - 1] = T;
+					u[N - 1][i] = 0.0;
+				}
+					
+				for(i = 1; i < size - 1; i++) {
+					for(j = 1; j < N - 1; j++) {
+						u[i][j] = (3 * T) / 4;
+					}
+				}
+			}
+			else if (k == 0) {
 				for(i = 0; i < N; i++) 
 					u[0][i] = T;
 				for(i = 1; i < size - 1; i++) 
@@ -73,7 +85,8 @@ int main(int argc, char *argv[])
 			// printf( "inside2\n");
 			else if (k == NUMTHREADS - 1) {
 				// printf("%d: ", k);
-				for(i = 0; i < N; i++) 
+				u[size - 1][0] = T;
+				for(i = 1; i < N; i++) 
 					u[size - 1][i] = 0.0;
 				for(i = 1; i < size - 1; i++) 
 					u[i][0] = u[i][N - 1] = T;
@@ -101,8 +114,10 @@ int main(int argc, char *argv[])
 				// write to processes and read
 				count++;
 
-				// printf("pid : %d count : %d \n",k, count);
-				if (k == 0) {
+				if (k == 0 && NUMTHREADS == 1) {
+
+				}
+				else if (k == 0 && NUMTHREADS != 1) {
 					for(i = 0; i < N; i++) {
 						// write to below
 						write(pipe_below[0][1], (char*)&u[size - 2][i], sizeof(float));
@@ -117,6 +132,7 @@ int main(int argc, char *argv[])
 					for(i = 0; i < N; i++) {
 						// write to above
 						write(pipe_above[NUMTHREADS - 2][1], (char*)&u[1][i], sizeof(float));
+				// printf("pid : %d count : %d \n",k, count);
 					}
 					for(i = 0; i < N; i++) {
 						// read from above
@@ -167,9 +183,18 @@ int main(int argc, char *argv[])
 
 				if(signal == 1) {
 					if (k == 0) {
-						for(i = 0; i < size - 1; i++) {
-							for(j = 0; j < N; j++) {
-								write(pipe_parent[k][1], (char*)&u[i][j], sizeof(float));
+						if (NUMTHREADS == 1) {
+							for(i = 0; i < N; i++) {
+								for(j = 0; j < N; j++) {
+									write(pipe_parent[k][1], (char*)&u[i][j], sizeof(float));
+								}
+							}
+						}
+						else {
+							for(i = 0; i < size - 1; i++) {
+								for(j = 0; j < N; j++) {
+									write(pipe_parent[k][1], (char*)&u[i][j], sizeof(float));
+								}
 							}
 						}
 					}		
@@ -232,9 +257,10 @@ int main(int argc, char *argv[])
 	for(int k = 0; k < NUMTHREADS; k++) {
 		int size = N / NUMTHREADS;
 		if (k == NUMTHREADS - 1) size += (N % NUMTHREADS);
-		if (k == 0 || k == N - 1) size += 1;
+		if (k == 0 || k == NUMTHREADS - 1) size += 1;
 		else size += 2;
 		float val;
+		// if (k == 0 && NUMTHREADS == 1) size = N;
 		if (k == 0) {
 			for(i =0; i < size - 1; i++) {
 				for(j = 0; j < N; j++) {
