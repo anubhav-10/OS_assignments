@@ -186,10 +186,10 @@ UPROGS=\
 	_add\
 	_ps\
 	_jacob\
-	_jacob_parallel\
+	_maekawa\
 
-fs.img: mkfs README arr $(UPROGS)
-	./mkfs fs.img README arr $(UPROGS)
+fs.img: mkfs README assig2a.inp assig2b.inp $(UPROGS)
+	./mkfs fs.img README assig2a.inp assig2b.inp $(UPROGS)
 
 -include *.d
 
@@ -257,7 +257,7 @@ EXTRA=\
         user_toggle.c print_count.c\
     	add.c ps.c \
 	jacob.c\
-	jacob_parallel.c\
+	maekawa.c\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\
